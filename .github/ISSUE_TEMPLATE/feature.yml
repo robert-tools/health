@@ -1,0 +1,37 @@
+name: "✨ Feature request"
+description: "Request a new feature"
+title: "✨ [Feature]: "
+labels: ["✨ feature"]
+assignees: []
+
+body:
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: "📋 Checklist"
+      options:
+        - label: "implement changes"
+        - label: "test features"
+        - label: "add missing JSDoc"
+        - label: "update README"
+        - label: "update ADRs"
+        - label: "update CHANGELOG"
+        - label: "update version"
+
+  - type: textarea
+    id: background
+    attributes:
+      label: "💡 Background"
+      description: "Why is this change needed?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: changes
+    attributes:
+      label: "✨ Changes"
+      description: "What needs to be changed?"
+      value: |
+        - [ ] 
+    validations:
+      required: true
