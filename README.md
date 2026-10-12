@@ -1,21 +1,21 @@
-# 🗂️ @robert.tools/sample
+# 🗂️ @robert.tools/health
 
-<description>
+provide functions to detect the health of your project
 
 ## 📜 Usage
 
 ### 🟢 Installation
 
 ```bash
-npm install @robert.tools/sample
+npm install @robert.tools/health
 ```
 
 ### 📝 Sample usage
 
 ```typescript
-import { <name> } from '@robert.tools/sample';
+import { health } from '@robert.tools/health';
 
-<name>('hello'); // '<name>: hello'
+health('hello'); // 'health: hello'
 ```
 
 ## 🗃️ commands
