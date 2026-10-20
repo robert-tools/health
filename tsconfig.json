@@ -8,7 +8,7 @@
         ],
         "types": [
             "node",
-            "@types/jest"
+            "jest"
         ],
         "allowJs": true,
         "skipLibCheck": true,

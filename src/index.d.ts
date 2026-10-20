@@ -1,8 +1,3 @@
-/**
- * 🏷️ typing module
- * @version 1.0.0
- * @date 2026-10-12
- * @license MIT
- * @author Robert Willemelis <github.com/willi84>
- */
-export type SAMPLE = string;
+export type LOG_TYPE = 'INFO' | 'FAIL' | 'OK';
+export type LOG_ENTRY = { type: LOG_TYPE; message: string; context: string };
+export type LOG_ENTRIES = LOG_ENTRY[];
