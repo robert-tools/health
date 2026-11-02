@@ -5,3 +5,9 @@
 ### ⚙️ chore
 
 - setup project
+
+### 🗃️ API changes
+
+- add checkConnection() function
+- add showLogs() function
+- add checkFolder() function

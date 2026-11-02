@@ -10,7 +10,6 @@ import type { LOG_ENTRIES } from './../index.d';
 import { getNumByType, printLogs } from './utils';
 import { LOG } from '@robert.tools/log';
 
-
 describe('✅ printLogs()', () => {
     const FN = printLogs;
     const spyOK = jest.spyOn(LOG, 'OK');

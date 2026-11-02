@@ -22,8 +22,9 @@ health('hello'); // 'health: hello'
 
 After an npm install with `npm i` the following commands are available:
 
-* initialize placeholders: `npm run init <semantic>`
-* release a new version: `npm run release <semantic>`
+* check the connection to a given URL using and time frame `checkConnection()`
+* display log entries with optional filtering using `showLogs()`
+* check the health of a folder using `checkFolder()`
 
 ## ⚖️ Notes
 

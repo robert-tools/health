@@ -4,7 +4,7 @@ import type { LOG_ENTRIES } from '../index.d';
 
 /**
  * 🎯 Prints the log entries to the console, optionally filtering by type.
- * @param {LOG_ENTRIES} logItems ➡️ The array of log entries to print.
+ * @param {LOG_ENTRIES} logItems ➡️ array of log entries
  * @param {string} [filterBy] ➡️ log type to filter by (optional)
  * @returns {void} 📤 This function does not return a value.
  */

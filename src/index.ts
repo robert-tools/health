@@ -1,11 +1,21 @@
 import { command } from '@robert.tools/cmd';
 import { getHttpStatusValue } from '@robert.tools/http';
-import { green, LOG, red, white, yellow } from '@robert.tools/log';
+import { blue, green, LOG, red, yellow } from '@robert.tools/log';
 import { getProp } from '@robert.tools/utils';
 import type { LOG_ENTRIES, LOG_ENTRY } from './index.d';
 import { FS } from '@robert.tools/fs';
 import { getNumByType, printLogs } from './utils/utils';
 
+const timeout = 200;
+const httpConfig = { forwarding: true, method: 'GET', showLog: false, timeout };
+
+/**
+ * 🎯 Checks the connection to a given URL and logs the status.
+ * @param {string} ctx ➡️ context of log entries
+ * @param {string} url ➡️ URL to check
+ * @param {any} opts ➡️ optional configuration
+ * @returns {LOG_ENTRIES} 📤 array of log entries as checkresult
+ */
 export const checkConnection = (
     ctx: string,
     url: string,
@@ -15,101 +25,86 @@ export const checkConnection = (
     const interval = getProp(opts, 'interval', 500); // in ms
     const started = Date.now();
 
-    const httpConfig = {
-        forwarding: true,
-        method: 'GET',
-        showLog: false,
-        timeout: 200,
-    };
     let isReady = false;
     let lastState: string = '0';
-    const logEntries: LOG_ENTRIES = [];
+    const logs: LOG_ENTRIES = [];
     while (Date.now() - started < timeout) {
         const message = `⏳ Checking status...`;
-        logEntries.push({ type: 'INFO', message, context: ctx });
+        logs.push({ type: 'INFO', message, context: ctx });
         try {
             const remaining = timeout - (Date.now() - started);
             const httpStatus: string = getHttpStatusValue(url, httpConfig);
             lastState = httpStatus;
             if (httpStatus === '200') {
-                // LOG.OK(`Vite is ready. [🌐 http: ${httpStatus}]`);
                 isReady = true;
                 break;
             } else {
                 const debug = `[🌐 http: ${httpStatus} / ⏳ remain: ${remaining}ms]`;
                 const message = `WAITING ... ${debug}`;
-                logEntries.push({ type: 'INFO', message, context: ctx });
+                logs.push({ type: 'INFO', message, context: ctx });
             }
             command(`sleep ${interval / 1000}`);
         } catch (e: any) {
             const message = `Error while checking status: ${e.message}`;
-            logEntries.push({ type: 'FAIL', message, context: ctx });
+            logs.push({ type: 'FAIL', message, context: ctx });
             // retry
         }
     }
-    if (isReady) {
-        const message = `is ready (🌐 status: ${lastState})`;
-        logEntries.push({ type: 'OK', message, context: ctx });
-    } else {
-        const message = `is not ready  (🌐 status: ${lastState})`;
-        logEntries.push({ type: 'FAIL', message, context: ctx });
-    }
-    return logEntries;
+    const type = isReady ? 'OK' : 'FAIL';
+    const message = `${isReady ? '' : 'not '}ready (🌐 status: ${lastState})`;
+    logs.push({ type, message, context: ctx });
+    return logs;
 };
 
-export const showLogs = (logItems: LOG_ENTRIES, showAll = false) => {
+/**
+ * 🎯 Displays log entries with optional filtering based on their type
+ * @param {LOG_ENTRIES} logs ➡️ array of log entries
+ * @param {boolean} showAll ➡️ flag indicate to show all or only relevant logs
+ * @returns {void} 📤 This function does not return a value.
+ */
+export const showLogs = (logs: LOG_ENTRIES, showAll: boolean = false): void => {
     if (showAll) {
-        const contextes = logItems
+        const contextes = logs
             .map((logEntry: LOG_ENTRY) => logEntry.context)
             .filter((value, index, self) => self.indexOf(value) === index);
         for (const context of contextes) {
-            const ctxLogs = logItems.filter(
+            const ctxLogs = logs.filter(
                 (logEntry: LOG_ENTRY) => logEntry.context === context
             );
             printLogs(ctxLogs);
         }
     }
 
-    const all = logItems.length;
-    const ok = getNumByType(logItems, 'OK');
-    const warn = getNumByType(logItems, 'WARN');
-    const fail = getNumByType(logItems, 'FAIL');
-    const info = getNumByType(logItems, 'INFO');
+    const all = logs.length;
+    const ok = getNumByType(logs, 'OK');
+    const warn = getNumByType(logs, 'WARN');
+    const fail = getNumByType(logs, 'FAIL');
+    const info = getNumByType(logs, 'INFO');
 
     // export const colorize = (msg: string, bg: string, fg: string, pad = '  ') => {
     const strOK = green(`OK: ${ok}`);
     const strWARN = yellow(`WARN: ${warn}`);
     const strFAIL = red(`FAIL: ${fail}`);
-    const strINFO = white(`INFO: ${info}`);
+    const strINFO = blue(`INFO: ${info}`);
 
-    const stats = `${strOK}, ${strWARN}, ${strFAIL}, ${strINFO}`;
-    // all logs ecept fail and warn
-    // const failed = ['FAIL', 'WARN'];
+    const statsDetail = `${strOK}, ${strWARN}, ${strFAIL}, ${strINFO}`;
     const passed = ok + info;
-    if (passed === all) {
-        const statsOk = `${green(passed)}/${green(all)}`;
-        const message = `☘️💚 Healthcheck passed: All checks are good!`;
-        LOG.OK(`${message} [${statsOk}, ${stats}]`);
-        if (!showAll) {
-            // show ok logs
-            const allowed = ['OK', 'INFO'];
-            for (const allow of allowed) {
-                const okLogs = logItems.filter(
-                    (logEntry) => logEntry.type === allow
-                );
-                printLogs(okLogs);
-            }
-        }
-    } else {
-        const statsFail = `${red(passed)}/${all}`;
-        const message = `☘️💔 Healthcheck failed: Some checks not pass!`;
-        LOG.FAIL(`${message} [${statsFail}, ${stats}]`);
-        const allowed = ['FAIL', 'WARN'];
+    let allowed = ['OK', 'INFO'];
+    const hasPassed = passed === all;
+    const type = hasPassed ? 'OK' : 'FAIL';
+    let message = `☘️💚 Healthcheck passed: All checks passed!`;
+    const fn = hasPassed ? green : red;
+    if (!hasPassed) {
+        message = `☘️💔 Healthcheck failed: Some checks not pass!`;
+        allowed = ['FAIL', 'WARN'];
+    }
+    const statsSum = `${fn(passed)}/${fn(all)}`;
+    LOG[type](`${message} [${statsSum}, ${statsDetail}]`);
+    if (!showAll) {
+        // show just allowed logs
         for (const allow of allowed) {
-            const okLogs = logItems.filter(
-                (logEntry) => logEntry.type === allow
-            );
-            printLogs(okLogs);
+            const someLogs = logs.filter((logEntry) => logEntry.type === allow);
+            printLogs(someLogs);
         }
     }
 };
